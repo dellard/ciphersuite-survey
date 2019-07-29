@@ -1,0 +1,75 @@
+#!/bin/sh
+
+# Copyright 2017-2019 Raytheon BBN Technologies, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Driver for the cipher-survey program: iterates through
+# an input file of SNIs/hostnames, starting at the given
+# BASE and doing LEN hostnames, running the DRIVER for
+# each and storing the output in a new file.
+#
+# If the driver blocks or takes too long to establish a
+# connection, then the driver is killed after TIMEOUTLEN.
+
+if [ $# != 5 ]; then
+    echo "Usage: $0 BASE LEN DRIVER HOSTFILE OUTDIR"
+    exit 1
+fi
+
+TIMEOUTLEN="5s"
+TIMEOUT=$(which timeout)
+if [ ! -x "${TIMEOUT}" ]; then
+    echo "Error: timeout utility must be in your path"
+    exit 1
+fi
+
+BASE=$1
+LEN=$2
+DRIVER=$3
+HOSTFILE=$4
+OUTDIR=$5
+
+mkdir -p "${OUTDIR}"
+if [ ! -d "${OUTDIR}" ]; then
+    echo "ERROR: cannot create output directory ${OUTDIR}"
+    exit 1
+fi
+
+HOSTS=$(cat "${HOSTFILE}" | head -$((BASE + LEN)) | tail -$LEN)
+
+if [ $? -ne 0 ]; then
+    echo "ERROR: something failed"
+    exit 1
+fi
+
+OUTFILE="${OUTDIR}/out-$DRIVER-$BASE-$LEN.txt"
+rm -f "$OUTFILE"
+if [ -f "${OUTFILE}" ]; then
+    echo "ERROR: cannot truncate/create outfile $OUTFILE"
+    exit 1
+fi
+
+touch "$OUTFILE"
+if [ ! -f "${OUTFILE}" ]; then
+    echo "ERROR: cannot truncate/create outfile $OUTFILE"
+    exit 1
+fi
+
+for h in $HOSTS; do
+    echo $BASE $h
+    "${TIMEOUT}" "${TIMEOUTLEN}" ./$DRIVER $h $h >> "$OUTFILE"
+    "${TIMEOUT}" "${TIMEOUTLEN}" ./$DRIVER www.$h www.$h >> "$OUTFILE"
+    BASE=$((BASE + 1))
+done
+
