@@ -1,0 +1,88 @@
+#!/bin/sh
+
+# Copyright 2017-2019 Raytheon BBN Technologies, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+SERVER=$1
+SNI=$2
+
+if [ -z ${SSL+x} ]; then
+    echo "ERROR: SSL is not set"
+    exit 1
+fi
+
+# Cipher Suite: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 (0xc02b)		x
+# Cipher Suite: TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (0xc02f)			x
+# Cipher Suite: TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 (0xc02c)		x
+# Cipher Suite: TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 (0xc030)			x
+# Cipher Suite: TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 (0xcca9)		x
+# Cipher Suite: TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256 (0xcca8)		x
+# Cipher Suite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA (0xc013)			x
+# Cipher Suite: TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA (0xc014)			x
+# Cipher Suite: TLS_RSA_WITH_AES_128_GCM_SHA256 (0x009c)
+# Cipher Suite: TLS_RSA_WITH_AES_256_GCM_SHA384 (0x009d)
+# Cipher Suite: TLS_RSA_WITH_AES_128_CBC_SHA (0x002f)				x
+# Cipher Suite: TLS_RSA_WITH_AES_256_CBC_SHA (0x0035)				x
+# Cipher Suite: TLS_RSA_WITH_3DES_EDE_CBC_SHA (0x000a)
+
+# Ciphersuites offered by Firefox on win10,
+# captured 2019-01-02 (64.0)
+# captured 2019-03-01 (65.0.2)
+# captured 2019-04-26 (66.0.3)
+# captured 2019-05-31 (67.0)
+
+CIPHERS=""
+CIPHERS="$CIPHERS:ECDHE-ECDSA-AES128-GCM-SHA256"	# c02b
+CIPHERS="$CIPHERS:ECDHE-RSA-AES128-GCM-SHA256"		# c02f
+CIPHERS="$CIPHERS:ECDHE-ECDSA-CHACHA20-POLY1305"	# cca9
+CIPHERS="$CIPHERS:ECDHE-RSA-CHACHA20-POLY1305"		# cca8
+CIPHERS="$CIPHERS:ECDHE-ECDSA-AES256-GCM-SHA384"	# c02c
+CIPHERS="$CIPHERS:ECDHE-RSA-AES256-GCM-SHA384"		# c030
+
+CIPHERS="$CIPHERS:ECDHE-ECDSA-AES256-SHA"		# c00a
+CIPHERS="$CIPHERS:ECDHE-ECDSA-AES128-SHA"		# c009
+
+CIPHERS="$CIPHERS:ECDHE-RSA-AES128-SHA"			# c013
+CIPHERS="$CIPHERS:ECDHE-RSA-AES256-SHA"			# c014
+
+CIPHERS="$CIPHERS:DHE-RSA-AES128-SHA"			# 0033
+CIPHERS="$CIPHERS:DHE-RSA-AES256-SHA"			# 0039
+
+CIPHERS="$CIPHERS:AES128-SHA"				# 002f
+CIPHERS="$CIPHERS:AES256-SHA"				# 0035
+CIPHERS="$CIPHERS:3DES-CBC-SHA"				# 000a
+
+CIPHERS13="TLS_AES_128_GCM_SHA256"			# 1301
+CIPHERS13="$CIPHERS13:TLS_CHACHA20_POLY1305_SHA256"	# 1303
+CIPHERS13="$CIPHERS13:TLS_AES_256_GCM_SHA384"		# 1302
+
+out=$(echo "" | "$SSL" s_client -cipher "$CIPHERS" -ciphersuites "$CIPHERS13" \
+	-servername "$SNI" -connect "$SERVER":443)
+
+if [ $? -ne 0 ]; then
+    # echo "${out}"
+    echo $SERVER $SNI FAILED-NONE FAILED-NONE
+else
+    CHOSEN=$(echo "${out}" | grep ", Cipher is " | awk '{print $5}')
+    case "$CHOSEN" in
+	TLS_AES_128_GCM_SHA256|TLS_AES_256_GCM_SHA384|TLS_CHACHA20_POLY1305_SHA256)
+	    PROTO=TLSv1.3
+	    ;;
+	*)
+	    PROTO=$(echo "${out}" | grep "Protocol  : " | awk '{print $3}')
+	    ;;
+    esac
+
+    echo $SERVER $SNI $CHOSEN $PROTO
+fi
