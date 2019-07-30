@@ -27,6 +27,7 @@ fi
 # captured 2019-03-01 (72.0.3626.119)
 # captured 2019-04-26 (74.0.3729.108)
 # captured 2019-05-31 (74.0.3729.169)
+# captured 2019-07-30 (75.0.3770.142)
 
 CIPHERS=""
 # CIPHERS: grease

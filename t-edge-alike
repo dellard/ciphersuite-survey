@@ -30,6 +30,7 @@ fi
 # captured again (44.17763.1.0) 2019-03-01; no change
 # captured again (44.17763.1.0) 2019-04-26; no change
 # captured again (44.17763.1.0) 2019-05-31; no change
+# captured again (44.18362.267.0) 2019-07-30; no change
 
 CIPHERS=""
 CIPHERS="$CIPHERS:ECDHE-ECDSA-AES256-GCM-SHA384"	# c02c

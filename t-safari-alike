@@ -27,6 +27,7 @@ fi
 # Still the same on 2019/03/01, on Safari 12.0.3 (13606.4.5.3.1)
 # Still the same on 2019/04/26, on Safari 12.1 (13607.1.140.1.5)
 # Still the same on 2019/05/31, on Safari 12.1.1 (13607.2.6.1.2)
+# Still the same on 2019/07/30, on Safari 12.1.2 (13607.3.10)
 
 CIPHERS="ECDHE-ECDSA-AES256-GCM-SHA384" # 0xc02c
 CIPHERS="$CIPHERS:ECDHE-ECDSA-AES128-GCM-SHA256" # 0xc02b
