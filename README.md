@@ -24,3 +24,9 @@ openssl to use is first in your LD_LIBRARY_PATH.  In the simplest case:
 export LD_LIBRARY_PATH=$(pwd)/openssl
 export SSL=$(pwd)/openssl/apps/openssl
 ```
+
+Note that the run-survey script requires unzip and wget to be installed.
+
+To do the survey, simply run ./run-survey.
+
+
