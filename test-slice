@@ -71,5 +71,6 @@ for h in $HOSTS; do
     "${TIMEOUT}" "${TIMEOUTLEN}" ./$DRIVER $h $h >> "$OUTFILE"
     "${TIMEOUT}" "${TIMEOUTLEN}" ./$DRIVER www.$h www.$h >> "$OUTFILE"
     BASE=$((BASE + 1))
+    sleep 0.2
 done
 
