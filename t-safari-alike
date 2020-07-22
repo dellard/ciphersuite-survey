@@ -28,6 +28,8 @@ fi
 # Still the same on 2019/04/26, on Safari 12.1 (13607.1.140.1.5)
 # Still the same on 2019/05/31, on Safari 12.1.1 (13607.2.6.1.2)
 # Still the same on 2019/07/30, on Safari 12.1.2 (13607.3.10)
+# Captured on 2020/07/21, on Safari 13.1.1 (15609.2.9.1.2)
+#     (some really old ciphersuites we can't even test for -- skipping)
 
 CIPHERS="ECDHE-ECDSA-AES256-GCM-SHA384" # 0xc02c
 CIPHERS="$CIPHERS:ECDHE-ECDSA-AES128-GCM-SHA256" # 0xc02b
@@ -54,9 +56,11 @@ CIPHERS="$CIPHERS:AES128-SHA256" # 003c
 CIPHERS="$CIPHERS:AES256-SHA" # 0035
 CIPHERS="$CIPHERS:AES128-SHA" # 002f
 
-TLS13="-no_tls1_3"
+CIPHERS13="TLS_AES_128_GCM_SHA256"			# 1301
+CIPHERS13="$CIPHERS13:TLS_AES_256_GCM_SHA384"		# 1302
+CIPHERS13="$CIPHERS13:TLS_CHACHA20_POLY1305_SHA256"	# 1303
 
-out=$(echo "" | "$SSL" s_client $TLS13 -cipher "$CIPHERS" \
+out=$(echo "" | "$SSL" s_client -cipher "$CIPHERS" -ciphersuites "$CIPHERS13" \
 	-servername "$SNI" -connect "$SERVER":443)
 
 if [ $? -ne 0 ]; then
